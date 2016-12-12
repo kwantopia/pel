@@ -59,6 +59,9 @@ class TicTacToe:
 
 
     def print_reference(self):
+        """
+        Print the reference board cell numbers
+        """
         print "1 | 2 | 3"
         print "---------"
         print "4 | 5 | 6"
@@ -90,7 +93,7 @@ class TicTacToe:
                     played = True
 
     def play_smart_computer(self):
-        print "** Playing smart"
+        #print "** Playing smart"
         """
         1. Pick the center cell 5 (board_index = 4) if not, to increase chances
         2. Block any possible completions by X that is advantageous to O
@@ -105,21 +108,22 @@ class TicTacToe:
                 played = True
             else:
                 # check X's moves and place O where it's intersection of X's winning positions and O's winning positions
-                print "X positions: ", self.x_positions
+                #print "X positions: ", self.x_positions
                 x_winning = self.get_winning_positions(self.x_positions)
-                print "X winnings: ", x_winning
-                print "O positions: ", self.o_positions
+                #print "X winnings: ", x_winning
+                #print "O positions: ", self.o_positions
                 o_winning = self.get_winning_positions(self.o_positions)
-                print "O winnings: ", o_winning
+                #print "O winnings: ", o_winning
 
                 # next move should be intersection of x_winning and o_winning
                 possible_win_moves = x_winning.intersection(o_winning)
-                print "Possible win moves: ", possible_win_moves
-                # select random index from possible_win_moves
+                #print "Possible win moves: ", possible_win_moves
                 move_choices_len = len(possible_win_moves)
                 if move_choices_len == 1:
+                    # there's one good possible win moves
                     board_index = list(possible_win_moves)[0]
                 elif move_choices_len > 1:
+                    # select random index from possible_win_moves
                     board_index = random.choice(list(possible_win_moves))
                 else:
                     if len(x_winning) > 0:
@@ -128,7 +132,7 @@ class TicTacToe:
                     else:
                         # get remaining positions
                         left_over_positions = self.get_remaining_positions()
-                        print "Left over: ", left_over_positions
+                        #print "**Left over: ", left_over_positions
                         if len(left_over_positions) > 0:
                             board_index = random.choice(left_over_positions)
                         else:
@@ -141,7 +145,7 @@ class TicTacToe:
     def get_winning_positions(self, current_positions):
         winning_moves = set([])
         for w_set in self.winning_sets:
-            print w_set
+            #print w_set
             if current_positions <= w_set:
                 remaining_choices = w_set - current_positions
                 if len(remaining_choices) == 1:
@@ -175,7 +179,7 @@ class TicTacToe:
     def run(self):
         running = True
         while running:
-            cmd = raw_input('What is your next move?\n')
+            cmd = raw_input('What is your next move? (r, q or 1..9 for cell number)\n')
             if cmd == 'q':
                 running = False
             elif cmd == 'r':
