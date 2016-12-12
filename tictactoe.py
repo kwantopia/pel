@@ -108,16 +108,16 @@ class TicTacToe:
                 played = True
             else:
                 # check X's moves and place O where it's intersection of X's winning positions and O's winning positions
-                #print "X positions: ", self.x_positions
+                print "X positions: ", self.x_positions
                 x_winning = self.get_winning_positions(self.x_positions)
-                #print "X winnings: ", x_winning
-                #print "O positions: ", self.o_positions
+                print "X winnings: ", x_winning
+                print "O positions: ", self.o_positions
                 o_winning = self.get_winning_positions(self.o_positions)
-                #print "O winnings: ", o_winning
+                print "O winnings: ", o_winning
 
                 # next move should be intersection of x_winning and o_winning
                 possible_win_moves = x_winning.intersection(o_winning)
-                #print "Possible win moves: ", possible_win_moves
+                print "Possible win moves: ", possible_win_moves
                 move_choices_len = len(possible_win_moves)
                 if move_choices_len == 1:
                     # there's one good possible win moves
@@ -138,16 +138,22 @@ class TicTacToe:
                         else:
                             # something is wrong, game is over and all positions are taken
                             raise GameErrorException("No left over positions")
-                if self.board[board_index] is " ":
+                if self.board[board_index] == " ":
                     self.board[board_index] = 'O'
+                    self.o_positions.add(board_index)
                     played = True
+                else:
+                    print "Computer chose a filled cell position: ", board_index
 
     def get_winning_positions(self, current_positions):
+        """
+            Find those cells where one can play advantageous 
+        """
         winning_moves = set([])
         for w_set in self.winning_sets:
-            #print w_set
+            print w_set
             if current_positions <= w_set:
-                remaining_choices = w_set - current_positions
+                remaining_choices = w_set - current_positions - set(self.get_occupied_positions())
                 if len(remaining_choices) == 1:
                     # if there's one winning move left, then just return that one so that it can be blocked
                     winning_moves = remaining_choices
@@ -155,6 +161,9 @@ class TicTacToe:
                 winning_moves |= remaining_choices
 
         return winning_moves
+
+    def get_occupied_positions(self):
+        return [i for i, elem in enumerate(self.board) if elem != " "]
 
     def get_remaining_positions(self):
         return [i for i, elem in enumerate(self.board) if elem == " "]
