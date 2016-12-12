@@ -22,7 +22,7 @@ class GameErrorException(Exception):
 
 class TicTacToe:
 
-    def __init__(self, smart=None):
+    def __init__(self, smart=None, debug=False):
         self.board = [" ", " ", " ",
                 " ", " ", " ",
                 " ", " ", " "]
@@ -30,6 +30,8 @@ class TicTacToe:
         self.smart = False
         if smart:
             self.smart = True
+
+        self.debug = debug
 
         # board index for winning
         self.wins = [
@@ -96,8 +98,9 @@ class TicTacToe:
         #print "** Playing smart"
         """
         1. Pick the center cell 5 (board_index = 4) if not, to increase chances
-        2. Block any possible completions by X that is advantageous to O
-        3. If have possible winning completion, get it done and win
+        2. If there's a winning cell, fill the cell position
+        3. Block any possible completions by X that is advantageous to O
+        3. Choose a random position among remaining positions
         """
         played = False
         while not played:
@@ -108,31 +111,40 @@ class TicTacToe:
                 played = True
             else:
                 # check X's moves and place O where it's intersection of X's winning positions and O's winning positions
-                print "X positions: ", self.x_positions
+                if self.debug:
+                    print "X positions: ", self.x_positions
                 x_winning = self.get_winning_positions(self.x_positions)
-                print "X winnings: ", x_winning
-                print "O positions: ", self.o_positions
+                if self.debug:
+                    print "X winnings: ", x_winning
+                if self.debug:
+                    print "O positions: ", self.o_positions
                 o_winning = self.get_winning_positions(self.o_positions)
-                print "O winnings: ", o_winning
+                if self.debug:
+                    print "O winnings: ", o_winning
 
                 # next move should be intersection of x_winning and o_winning
-                possible_win_moves = x_winning.intersection(o_winning)
-                print "Possible win moves: ", possible_win_moves
+                possible_win_moves = x_winning & o_winning
+                if self.debug:
+                    print "Possible win moves: ", possible_win_moves
                 move_choices_len = len(possible_win_moves)
                 if move_choices_len == 1:
-                    # there's one good possible win moves
+                    # there's one good possible win move
                     board_index = list(possible_win_moves)[0]
                 elif move_choices_len > 1:
                     # select random index from possible_win_moves
                     board_index = random.choice(list(possible_win_moves))
                 else:
-                    if len(x_winning) > 0:
+                    if len(o_winning) > 0:
+                        # can win the game
+                        board_index = random.choice(list(o_winning))
+                    elif len(x_winning) > 0:
                         # try to block X by placing in cell that X may win
                         board_index = random.choice(list(x_winning))
                     else:
                         # get remaining positions
                         left_over_positions = self.get_remaining_positions()
-                        #print "**Left over: ", left_over_positions
+                        if self.debug:
+                            print "**Left over: ", left_over_positions
                         if len(left_over_positions) > 0:
                             board_index = random.choice(left_over_positions)
                         else:
@@ -143,27 +155,30 @@ class TicTacToe:
                     self.o_positions.add(board_index)
                     played = True
                 else:
-                    print "Computer chose a filled cell position: ", board_index
+                    raise GameErrorException("Computer chose a filled cell position: {0}".format(board_index))
 
     def get_winning_positions(self, current_positions):
         """
-            Find those cells where one can play advantageous 
+            Find those cells where one can play advantageous
         """
         winning_moves = set([])
         for w_set in self.winning_sets:
-            print w_set
-            if current_positions <= w_set:
-                remaining_choices = w_set - current_positions - set(self.get_occupied_positions())
-                if len(remaining_choices) == 1:
-                    # if there's one winning move left, then just return that one so that it can be blocked
+            if self.debug:
+                print w_set
+            if len(current_positions & w_set) > 0:
+                remaining_choices = w_set - current_positions
+                if len(remaining_choices) == 1 and not bool(remaining_choices & self.get_occupied_positions()):
+                    # if there's one winning move left it should be the move to make
                     winning_moves = remaining_choices
                     return winning_moves
+                # potential winning moves are what's remaining - any already occupied cells
                 winning_moves |= remaining_choices
+                winning_moves = winning_moves - self.get_occupied_positions()
 
         return winning_moves
 
     def get_occupied_positions(self):
-        return [i for i, elem in enumerate(self.board) if elem != " "]
+        return set([i for i, elem in enumerate(self.board) if elem != " "])
 
     def get_remaining_positions(self):
         return [i for i, elem in enumerate(self.board) if elem == " "]
@@ -217,10 +232,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--smart", help="play smart computer", action="store_true")
+    parser.add_argument("--debug", help="to show debugging messages", action="store_true")
     args = parser.parse_args()
 
     if args.smart:
-        game = TicTacToe(args.smart)
+        game = TicTacToe(args.smart, args.debug)
     else:
-        game = TicTacToe()
+        game = TicTacToe(debug=args.debug)
     game.run()
